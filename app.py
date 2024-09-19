@@ -24,6 +24,17 @@ def upload_file():
     if file.filename == "":
         return jsonify({"error": "no selected file"}), 400
 
+    # check if the file is a PDF
+    if not file.filename.lower().endswith(".pdf"):
+        return jsonify({"error": "only PDF files are allowed"}), 400
+
+    # check if the file size is less than 50MB
+    if len(file.read()) > 50 * 1024 * 1024:
+        return jsonify({"error": "file size exceeds 50MB"}), 400
+
+    # Reset file pointer to the beginning after reading its size
+    file.seek(0)
+
     # save the file to the server
     filename = f"{dt.datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}"
     upload_folder = "upload"
