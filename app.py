@@ -26,11 +26,11 @@ def upload_file():
 
     # save the file to the server
     filename = f"{dt.datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}"
-
-    # os.makedirs(
-    #    upload_folder, exist_ok=True
-    # )  # Create the directory if it doesn't exist
-    # file.save(os.path.join(upload_folder, filename))
+    upload_folder = "upload"
+    os.makedirs(
+        upload_folder, exist_ok=True
+    )  # Create the directory if it doesn't exist
+    file.save(os.path.join(upload_folder, filename))
 
     return jsonify({"filename": filename}), 200
 

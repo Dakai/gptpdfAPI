@@ -161,3 +161,5 @@ cython_debug/
 # Windows specific files
 Thumbs.db
 ehthumbs.db
+
+*.pdf
