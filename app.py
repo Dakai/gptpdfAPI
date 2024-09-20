@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from flask import Flask, request, jsonify
 import shutil
 import datetime as dt
@@ -30,6 +31,7 @@ def pdf_to_markdown(pdf_path, api_key, output_dir):
 @app.route("/upload", methods=["POST"])
 def upload_file():
     api_key = os.environ.get("OPENAI_API_KEY")
+    # print(api_key)
 
     # check if the post request has the file part
     if "file" not in request.files:
@@ -72,9 +74,10 @@ def upload_file():
         markdown_content = pdf_to_markdown(
             os.path.join(upload_folder, file.filename),
             output_dir=upload_folder,
-            api_key=api_token,
-            model="gpt-4o-mini",
+            api_key=api_key,
         )
+
+        return jsonify({"markdown": markdown_content}), 200
     except Exception as e:
         print(f"An error occurred: {str(e)}")
         sys.exit(1)
@@ -83,7 +86,6 @@ def upload_file():
     # shutil.rmtree(upload_folder)
 
     # return jsonify({"filename": file.filename}), 200
-    return jsonify({"markdown": markdown_content}), 200
 
 
 if __name__ == "__main__":
