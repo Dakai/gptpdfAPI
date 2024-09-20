@@ -19,8 +19,12 @@ def encode_image_to_base64(image_path):
         return base64_encoded_data.decode("utf-8")
 
 
-def replace_png_with_base64(markdown_content):
-    """Replace PNG image references in a Markdown string with Base64 strings."""
+def replace_png_with_base64(markdown_file_path, output_file_path):
+    """Replace PNG image references in a Markdown file with Base64 strings."""
+    # Read the content of the markdown file
+    with open(markdown_file_path, "r", encoding="utf-8") as file:
+        content = file.read()
+
     # Regular expression to find PNG images
     png_pattern = r"!\[.*?\]\((.*?\.png)\)"
 
@@ -36,9 +40,11 @@ def replace_png_with_base64(markdown_content):
             return match.group(0)  # Return the original markdown if file not found
 
     # Replace all PNG image references with Base64 strings
-    updated_content = re.sub(png_pattern, replace_with_base64, markdown_content)
+    updated_content = re.sub(png_pattern, replace_with_base64, content)
 
-    return updated_content
+    # Write the updated content to the output file
+    with open(output_file_path, "w", encoding="utf-8") as output_file:
+        output_file.write(updated_content)
 
 
 def pdf_to_markdown(pdf_path, api_key, output_dir):
@@ -108,9 +114,8 @@ def upload_file():
             output_dir=upload_folder,
             api_key=api_key,
         )
-        updated_markdown = replace_png_with_base64(markdown_content)
-        return jsonify({"markdown": updated_markdown}), 200
-
+        return jsonify({"markdown": file.filename}), 200
+        # return jsonify({"markdown": markdown_content}), 200
     except Exception as e:
         print(f"An error occurred: {str(e)}")
         return jsonify({"error": str(e)}), 500
@@ -118,6 +123,7 @@ def upload_file():
 
     # remove the folder
     # shutil.rmtree(upload_folder)
+
     # return jsonify({"filename": file.filename}), 200
 
 
