@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify
+import shutil
 import datetime as dt
 import os
 
@@ -36,14 +37,20 @@ def upload_file():
     file.seek(0)
 
     # save the file to the server
-    filename = f"{dt.datetime.now().strftime('%Y%m%d%H%M%S')}_{file.filename}"
-    upload_folder = "upload"
+    timestamp = dt.datetime.now().strftime("%Y%m%d%H%M%S")
+    upload_folder = os.path.join(
+        "upload", f"{timestamp}_{os.path.splitext(file.filename)[0]}"
+    )
+    print(upload_folder)
     os.makedirs(
         upload_folder, exist_ok=True
     )  # Create the directory if it doesn't exist
-    file.save(os.path.join(upload_folder, filename))
+    file.save(os.path.join(upload_folder, file.filename))
 
-    return jsonify({"filename": filename}), 200
+    # remove the folder
+    shutil.rmtree(upload_folder)
+
+    return jsonify({"filename": file.filename}), 200
 
 
 if __name__ == "__main__":
