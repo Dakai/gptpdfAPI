@@ -4,9 +4,41 @@ import shutil
 import datetime as dt
 import os
 import sys
+import base64
+import re
 from gptpdf import parse_pdf
 
 app = Flask(__name__)
+
+
+def encode_image_to_base64(image_path):
+    """Encode a PNG image to a Base64 string."""
+    with open(image_path, "rb") as image_file:
+        image_data = image_file.read()
+        base64_encoded_data = base64.b64encode(image_data)
+        return base64_encoded_data.decode("utf-8")
+
+
+def replace_png_with_base64(markdown_content):
+    """Replace PNG image references in a Markdown string with Base64 strings."""
+    # Regular expression to find PNG images
+    png_pattern = r"!\[.*?\]\((.*?\.png)\)"
+
+    def replace_with_base64(match):
+        image_path = match.group(1)
+
+        # Check if the image file exists
+        if os.path.exists(image_path):
+            base64_string = encode_image_to_base64(image_path)
+            return f"![Image]({base64_string})"
+        else:
+            print(f"Warning: File {image_path} does not exist.")
+            return match.group(0)  # Return the original markdown if file not found
+
+    # Replace all PNG image references with Base64 strings
+    updated_content = re.sub(png_pattern, replace_with_base64, markdown_content)
+
+    return updated_content
 
 
 def pdf_to_markdown(pdf_path, api_key, output_dir):
@@ -76,15 +108,16 @@ def upload_file():
             output_dir=upload_folder,
             api_key=api_key,
         )
+        updated_markdown = replace_png_with_base64(markdown_content)
+        return jsonify({"markdown": updated_markdown}), 200
 
-        return jsonify({"markdown": markdown_content}), 200
     except Exception as e:
         print(f"An error occurred: {str(e)}")
+        return jsonify({"error": str(e)}), 500
         sys.exit(1)
 
     # remove the folder
     # shutil.rmtree(upload_folder)
-
     # return jsonify({"filename": file.filename}), 200
 
 
