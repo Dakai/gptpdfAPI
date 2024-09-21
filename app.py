@@ -11,13 +11,6 @@ from gptpdf import parse_pdf
 
 app = Flask(__name__)
 
-
-def estimate_tokens(text, model_name="gpt-3.5-turbo"):
-    encoding = tiktoken.encoding_for_model(model_name)
-    tokens = encoding.encode(text)
-    return len(tokens)
-
-
 def encode_image_to_base64(image_path):
     """Encode a PNG image to a Base64 string."""
     with open(image_path, "rb") as image_file:
@@ -95,7 +88,11 @@ def upload_file():
         return jsonify({"error": "no selected file"}), 400
 
     # check if the file is a PDF
-    if not file.filename.lower().endswith(".pdf"):
+    if file.filename is None:
+        return jsonify({"error": "no selected file"}), 400
+
+    if file.filename.lower().endswith(".pdf"):
+
         return jsonify({"error": "only PDF files are allowed"}), 400
 
     # check if the file size is less than 50MB
@@ -107,15 +104,15 @@ def upload_file():
 
     # save the file to the server
     timestamp = dt.datetime.now().strftime("%Y%m%d%H%M%S")
+    filename = file.filename if file.filename else "default_filename"
     upload_folder = os.path.join(
-        "upload", f"{timestamp}_{os.path.splitext(file.filename)[0]}"
+        "upload", f"{timestamp}_{os.path.splitext(filename)[0]}"
     )
     print(upload_folder)
     os.makedirs(
         upload_folder, exist_ok=True
     )  # Create the directory if it doesn't exist
     file.save(os.path.join(upload_folder, file.filename))
-
     try:
         markdown_content = pdf_to_markdown(
             os.path.join(upload_folder, file.filename),
@@ -127,12 +124,6 @@ def upload_file():
             os.path.join(upload_folder, "output_base64.md"),
             upload_folder,
         )
-        with open(
-            os.path.join(upload_folder, "output_base64.md"), "r", encoding="utf-8"
-        ) as file:
-            text = file.read()
-            token_count = estimate_tokens(text)
-            print(f"Estimated token count: {token_count}")
         return jsonify({"markdown": file.filename}), 200
         # return jsonify({"markdown": markdown_content}), 200
     except Exception as e:
