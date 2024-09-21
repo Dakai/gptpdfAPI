@@ -19,7 +19,7 @@ def encode_image_to_base64(image_path):
         return base64_encoded_data.decode("utf-8")
 
 
-def replace_png_with_base64(markdown_file_path, output_file_path):
+def replace_png_with_base64(markdown_file_path, output_file_path, image_path):
     """Replace PNG image references in a Markdown file with Base64 strings."""
     # Read the content of the markdown file
     with open(markdown_file_path, "r", encoding="utf-8") as file:
@@ -29,14 +29,15 @@ def replace_png_with_base64(markdown_file_path, output_file_path):
     png_pattern = r"!\[.*?\]\((.*?\.png)\)"
 
     def replace_with_base64(match):
-        image_path = match.group(1)
+        image = match.group(1)
+        image_file = os.path.join(image_path, image)
 
         # Check if the image file exists
-        if os.path.exists(image_path):
-            base64_string = encode_image_to_base64(image_path)
+        if os.path.exists(image_file):
+            base64_string = encode_image_to_base64(image_file)
             return f"![Image]({base64_string})"
         else:
-            print(f"Warning: File {image_path} does not exist.")
+            print(f"Warning: File {image_file} does not exist.")
             return match.group(0)  # Return the original markdown if file not found
 
     # Replace all PNG image references with Base64 strings
@@ -113,6 +114,11 @@ def upload_file():
             os.path.join(upload_folder, file.filename),
             output_dir=upload_folder,
             api_key=api_key,
+        )
+        replace_png_with_base64(
+            os.path.join(upload_folder, "output.md"),
+            os.path.join(upload_folder, "output_base64.md"),
+            upload_folder,
         )
         return jsonify({"markdown": file.filename}), 200
         # return jsonify({"markdown": markdown_content}), 200
