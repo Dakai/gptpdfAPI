@@ -1,14 +1,21 @@
 #!/usr/bin/env python3
 from flask import Flask, request, jsonify
-import shutil
-import datetime as dt
 import os
+import re
 import sys
 import base64
-import re
+import shutil
+import datetime as dt
 from gptpdf import parse_pdf
 
+
 app = Flask(__name__)
+
+
+def estimate_tokens(text, model_name="gpt-3.5-turbo"):
+    encoding = tiktoken.encoding_for_model(model_name)
+    tokens = encoding.encode(text)
+    return len(tokens)
 
 
 def encode_image_to_base64(image_path):
@@ -120,6 +127,12 @@ def upload_file():
             os.path.join(upload_folder, "output_base64.md"),
             upload_folder,
         )
+        with open(
+            os.path.join(upload_folder, "output_base64.md"), "r", encoding="utf-8"
+        ) as file:
+            text = file.read()
+            token_count = estimate_tokens(text)
+            print(f"Estimated token count: {token_count}")
         return jsonify({"markdown": file.filename}), 200
         # return jsonify({"markdown": markdown_content}), 200
     except Exception as e:
