@@ -91,7 +91,7 @@ def upload_file():
     if file.filename is None:
         return jsonify({"error": "no selected file"}), 400
 
-    if file.filename.lower().endswith(".pdf"):
+    if not file.filename.lower().endswith(".pdf"):
 
         return jsonify({"error": "only PDF files are allowed"}), 400
 
